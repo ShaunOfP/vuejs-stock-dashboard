@@ -15,5 +15,8 @@ export default {
   background-color: #011F35;
   border-radius: 16px;
   padding: 20px 32px;
+  gap: 8px;
+  display: flex;
+  flex-direction: column;
 }
 </style>
