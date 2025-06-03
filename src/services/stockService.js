@@ -34,17 +34,21 @@ class StockSerivce {
         }
     }
 
-    async getRevenue(sheetName, revenue, netIncome, grossMargin) {
+    async getRevenue(sheetName, revenuePosition) {
         const data = await this.fetchData(sheetName);
-        return order.map(key => {
-            console.log(sheetName, key ,data[revenue][key]);
-            return {
-                company: sheetName,
-                revenue: data[revenue]?.[key],
-                netIncome: data[netIncome]?.[key],
-                grossMargin: data[grossMargin]?.[key]
-            };
-        });
+        return order.map(key => data[revenuePosition]?.[key]);
+    }
+
+    async getNetIncome(sheetName, netIncomePosition) {
+        const data = await this.fetchData(sheetName);
+        console.log('Fetched Data', data);
+        console.log('Row at netIncomePosition', data[netIncomePosition]);
+        return order.map(key => data[netIncomePosition]?.[key]);
+    }
+
+    async getGrossMargin(sheetName, grossMarginPosition) {
+        const data = await this.fetchData(sheetName);
+        return order.map(key => data[grossMarginPosition]?.[key]);
     }
 }
 

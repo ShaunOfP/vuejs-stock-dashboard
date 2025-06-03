@@ -13,7 +13,7 @@
         <div class="upper-section--main">
           <p class="no-margin">Revenue Q1 2024</p>
           <div>
-            <p class="no-margin">{{ stock.revenue }}</p>
+            <p class="no-margin"></p>
             <div>
               <p class="no-margin"></p>
               <p class="no-margin"></p>
@@ -26,7 +26,6 @@
     <div class="middle-section">
       <BaseCard>
         <h2>Revenue last 3 years</h2>
-        <p>Inhalt für die erste Karte.</p>
       </BaseCard>
       <BaseCard>
         <h2>Revenue Breakdown Magnificent Seven</h2>
@@ -36,7 +35,7 @@
     <div class="lower-section">
       <BaseCard>
         <h2>Net Income TTM</h2>
-        <p>Inhalt für die erste Karte.</p>
+        <BarChart :labels="companyNames" :values="latestTTMNetIncomes" :datasets="netIncomeDatasets" />
       </BaseCard>
       <BaseCard>
         <h2>Gross Margin in % LQ</h2>
@@ -51,70 +50,72 @@
 </template>
 
 <script>
+import BarChart from './components/BarChart.vue';
 import BaseCard from './components/BaseCard.vue';
 import { stockService } from '@/services/stockService';
 
 export default {
   name: 'App',
   components: {
-    BaseCard
+    BaseCard,
+    BarChart
   },
   data() {
     return {
       stockData: [
         {
           company: '$AAPL',
-          revenue: 3,
-          netIncome: 34,
-          grossMargin: 21,
+          revenue: 5,
+          netIncome: 36,
+          grossMargin: 23,
           readableName: 'Apple',
           imgPath: require('@/assets/img/logo_apple.svg')
         },
         {
           company: '$AMZN',
-          revenue: 7,
-          netIncome: 39,
-          grossMargin: 13,
+          revenue: 9,
+          netIncome: 41,
+          grossMargin: 15,
           readableName: 'Amazon',
           imgPath: require('@/assets/img/logo_amazon.svg')
         },
         {
           company: '$GOOG',
-          revenue: 3,
-          netIncome: 39,
-          grossMargin: 23,
+          revenue: 5,
+          netIncome: 41,
+          grossMargin: 25,
           readableName: 'Google',
           imgPath: require('@/assets/img/logo_google.svg')
         },
         {
           company: '$META',
-          revenue: 3,
-          netIncome: 25,
-          grossMargin: 9,
+          revenue: 5,
+          netIncome: 27,
+          grossMargin: 11,
           readableName: 'Meta',
           imgPath: require('@/assets/img/logo_meta.svg')
         },
         {
           company: '$MSFT',
-          revenue: 7,
-          netIncome: 28,
-          grossMargin: 13,
+          revenue: 9,
+          netIncome: 30,
+          grossMargin: 15,
           readableName: 'Microsoft',
           imgPath: require('@/assets/img/logo_microsoft.svg')
         },
         {
           company: '$NVDA',
-          revenue: 3,
-          netIncome: 27,
-          grossMargin: 9,
+          revenue: 5,
+          netIncome: 29,
+          grossMargin: 11,
           readableName: 'Nvidia',
           imgPath: require('@/assets/img/logo_nvidia.svg')
         },
         {
           company: '$TSLA',
-          revenue: 11,
-          netIncome: 42,
-          grossMargin: 24,
+          revenue: 13,
+          netIncome: 44,
+          grossMargin: 26,
           readableName: 'Tesla',
           imgPath: require('@/assets/img/logo_tesla.svg')
         }
@@ -122,8 +123,44 @@ export default {
     };
   },
   async created() {
-    for (let i = 0; i < this.stockData.length; i++) {
-      this.data = await stockService.getRevenue(this.stockData[i].company, this.stockData[i].revenue, this.stockData[i].netIncome, this.stockData[i].grossMargin);
+    const translatedStockData = await Promise.all(
+      this.stockData.map(async stock => {
+        const revenue = await stockService.getRevenue(stock.company, stock.revenue);
+        const netIncome = await stockService.getNetIncome(stock.company, stock.netIncome);
+        const grossMargin = await stockService.getGrossMargin(stock.company, stock.grossMargin);
+        return { ...stock, revenue, netIncome, grossMargin };
+      }));
+    this.stockData = translatedStockData;
+  },
+  computed: {
+    companyNames() {
+      return this.stockData.map(stock => stock.readableName);
+    },
+    latestTTMNetIncomes() {
+      return this.stockData.map(stock => {
+        return stock.netIncome?.slice(-12) ?? [];
+      });
+    },
+    netIncomeDatasets() {
+      return this.stockData.map(stock => ({
+        label: stock.company,
+        data: stock.netIncome?.slice(-12) ?? [],
+        backgroundColor: this.getColorFor(stock.company),
+      }));
+    }
+  },
+  methods: {
+    getColorFor(company) {
+      const colors = {
+        '$AAPL': '#196F8C',
+        '$AMZN': '#39DAFF',
+        '$GOOG': '#29A5C5',
+        '$META': '#31BFE2',
+        '$MSFT': '#218AA8',
+        '$NVDA': '#11546F',
+        '$TSLA': '#093A52'
+      };
+      return colors[company] || '#ddd';
     }
   }
 };
